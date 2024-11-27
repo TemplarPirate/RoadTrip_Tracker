@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Follow My APRS Road Trip</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f4f4f9;
+            margin: 0;
+            padding: 0;
+        }
+        h1 {
+            color: #333;
+        }
+        .data-container {
+            margin: 20px auto;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px;
+            border-radius: 10px;
+            background: #fff;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        pre {
+            text-align: left;
+            background: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Follow My APRS Road Trip</h1>
+    <div class="data-container">
+        <h2>Real-Time Location Data</h2>
+        <div id="aprs-data">
+            Loading data...
+        </div>
+    </div>
+
+    <script>
+        const proxyUrl = "https://cors-anywhere.herokuapp.com/";
+        const apiKey = "198405.MFODxCkxNhUPKb";
+        const callsign = "KD5FPA-5"; // Include your callsign with SSID
+        const aprsUrl = `${proxyUrl}https://api.aprs.fi/api/get?name=${callsign}&what=loc&apikey=${apiKey}&format=json`;
+
+        async function fetchAPRSData() {
+            try {
+                const response = await fetch(aprsUrl);
+                const data = await response.json();
+
+                if (data && data.entries && data.entries.length > 0) {
+                    const entry = data.entries[0];
+                    const html = `
+                        <p><strong>Callsign:</strong> ${entry.name}</p>
+                        <p><strong>Latitude:</strong> ${entry.lat}</p>
+                        <p><strong>Longitude:</strong> ${entry.lng}</p>
+                        <p><strong>Timestamp:</strong> ${new Date(entry.time * 1000).toLocaleString()}</p>
+                        <p><strong>Speed:</strong> ${entry.speed || 0} km/h</p>
+                        <p><strong>Course:</strong> ${entry.course || "N/A"}</p>
+                        <p><strong>Altitude:</strong> ${entry.altitude || "N/A"} m</p>
+                        <p><strong>Message:</strong> ${entry.comment || "No message"}</p>
+                    `;
+                    document.getElementById('aprs-data').innerHTML = html;
+                } else {
+                    document.getElementById('aprs-data').innerHTML = "<p>No data available at the moment.</p>";
+                }
+            } catch (error) {
+                console.error("Error fetching APRS data:", error);
+                document.getElementById('aprs-data').innerHTML = "<p>Error fetching data. Please try again later.</p>";
+            }
+        }
+
+        // Refresh data every 60 seconds
+        fetchAPRSData();
+        setInterval(fetchAPRSData, 60000);
+    </script>
+</body>
+</html>
